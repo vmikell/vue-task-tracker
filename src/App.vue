@@ -1,7 +1,13 @@
 <template>
   <div class="container">
-    <Header title="Task Tracker" />
-    <AddTask @add-task="addTask" />
+    <Header
+      @toggle-add-task="toggleAddTask"
+      title="Task Tracker"
+      :showAddTask="showAddTask"
+    />
+    <div v-if="showAddTask">
+      <AddTask @add-task="addTask" />
+    </div>
     <Tasks
       @toggle-reminder="toggleReminder"
       @delete-task="deleteTask"
@@ -25,6 +31,7 @@ export default {
   data() {
     return {
       tasks: [],
+      showAddTask: false,
     }
   },
   methods: {
@@ -32,7 +39,7 @@ export default {
       this.tasks = [...this.tasks, task]
     },
     deleteTask(id) {
-      if (confirm('Are you sure?')) {
+      if (confirm(`Are you sure? This can't be undone`)) {
         this.tasks = this.tasks.filter((task) => task.id !== id)
       }
     },
@@ -41,28 +48,22 @@ export default {
         task.id === id ? { ...task, reminder: !task.reminder } : task
       )
     },
+    toggleAddTask() {
+      this.showAddTask = !this.showAddTask
+    },
+    async fetchData() {
+      const res = await fetch('api/tasks')
+      const data = await res.json()
+      return data
+    },
+    async fetchTask(id) {
+      const res = await fetch(`api/tasks/${id}`)
+      const data = await res.json()
+      return data
+    },
   },
-  created() {
-    this.tasks = [
-      {
-        id: 1,
-        text: 'Doctors Appointment',
-        day: 'March 1st at 2:30pm',
-        reminder: true,
-      },
-      {
-        id: 2,
-        text: 'Meeting at school',
-        day: 'March 3rd at 1:30pm',
-        reminder: true,
-      },
-      {
-        id: 3,
-        text: 'Shopping',
-        day: 'March 3rd at 11:00am',
-        reminder: false,
-      },
-    ]
+  async created() {
+    this.tasks = await this.fetchData()
   },
 }
 </script>
